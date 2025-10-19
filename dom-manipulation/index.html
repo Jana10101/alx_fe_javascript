@@ -36,6 +36,21 @@
   <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
 
   <p id="syncStatus"></p>
+  <div id="app">
+  <h1>Dynamic Quote Generator</h1>
+  <p id="quoteDisplay">Loading quote...</p>
+
+  <label for="categoryFilter">Filter by category:</label>
+  <select id="categoryFilter" onchange="filterQuotes()">
+    <option value="all">All Categories</option>
+  </select>
+
+  <button id="newQuote">Show New Quote</button>
+  <p id="syncStatus" style="color: green; font-weight: bold;"></p>
+</div>
+
+<script src="script.js"></script>
+
 
   <script src="script.js"></script>
 </body>

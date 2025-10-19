@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Quote Generator</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamic Quote Generator with Filtering</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -14,13 +14,21 @@
   <main>
     <div id="quoteContainer">
       <p id="quoteText">Click "New Quote" to get started!</p>
+      <p id="quoteCategory" class="category"></p>
     </div>
 
-    <button id="newQuoteBtn">New Quote</button>
+    <div class="controls">
+      <button id="newQuoteBtn">New Quote</button>
+
+      <select id="categoryFilter" onchange="filterQuotes()">
+        <option value="all">All Categories</option>
+      </select>
+    </div>
 
     <h3>Add Your Own Quote</h3>
     <form id="addQuoteForm">
-      <input type="text" id="newQuote" placeholder="Enter your quote..." required>
+      <input type="text" id="newQuote" placeholder="Enter your quote..." required />
+      <input type="text" id="newCategory" placeholder="Enter category..." required />
       <button type="submit">Add Quote</button>
     </form>
 

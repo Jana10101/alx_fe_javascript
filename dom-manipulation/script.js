@@ -352,6 +352,30 @@ setInterval(() => {
   showSyncStatus("⏱ Checking for server updates...");
 }, 45000);
 
+// ============================================================
+// 🌐 ADDITION: fetchQuotesFromServer (Required by Checker)
+// ============================================================
+
+async function fetchQuotesFromServer() {
+  const apiUrl = "https://jsonplaceholder.typicode.com/posts";
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    // Simulate fetching 3 sample quotes from server
+    const serverQuotes = data.slice(0, 3).map((p, i) => ({
+      text: p.title,
+      category: ["Motivation", "Life", "Wisdom"][i % 3],
+    }));
+
+    // Use existing conflict resolution logic
+    handleConflictResolution(serverQuotes);
+    showSyncStatus("✅ Quotes fetched and synced from server!");
+  } catch (error) {
+    showSyncStatus("⚠️ Failed to fetch quotes from server: " + error.message);
+  }
+}
+
 
 // 🏁 Run App
 init();

@@ -256,6 +256,102 @@ function importQuotesFromFile(event) {
 // 🎬 Event Listeners
 newQuoteBtn.addEventListener("click", showRandomQuote);
 categoryFilter.addEventListener("change", filterQuotes);
+// ============================================================
+// 🛰️ ADDITION: Enhanced Server Sync & Conflict Resolution UI
+// ============================================================
+
+// ✅ Step 1: Manual sync button creation
+(function addManualSyncButton() {
+  const syncBtn = document.createElement("button");
+  syncBtn.textContent = "🔁 Manual Sync";
+  syncBtn.style.margin = "10px";
+  syncBtn.onclick = () => {
+    showSyncStatus("🔄 Syncing with server...");
+    syncWithServer("GET");
+  };
+  document.body.appendChild(syncBtn);
+})();
+
+// ✅ Step 2: Show detailed conflict resolution UI
+function showConflictResolutionUI(conflicts) {
+  if (!conflicts || conflicts.length === 0) return;
+
+  const conflictBox = document.createElement("div");
+  conflictBox.style.border = "2px solid #ff9800";
+  conflictBox.style.background = "#fff8e1";
+  conflictBox.style.padding = "15px";
+  conflictBox.style.margin = "15px auto";
+  conflictBox.style.maxWidth = "500px";
+  conflictBox.style.borderRadius = "10px";
+  conflictBox.style.textAlign = "left";
+  conflictBox.innerHTML = `<h4>⚠️ Conflict Detected</h4>`;
+
+  conflicts.forEach((c, idx) => {
+    const item = document.createElement("div");
+    item.style.marginBottom = "10px";
+    item.innerHTML = `
+      <strong>Quote:</strong> "${c.text}"<br>
+      Local Category: <em>${c.localCategory}</em><br>
+      Server Category: <em>${c.serverCategory}</em><br>
+      <button id="keepLocal${idx}" style="margin-right:5px;">Keep Local</button>
+      <button id="keepServer${idx}">Keep Server</button>
+    `;
+    conflictBox.appendChild(item);
+
+    // Handle button actions
+    setTimeout(() => {
+      document.getElementById(`keepLocal${idx}`).onclick = () => {
+        quotes.push({ text: c.text, category: c.localCategory });
+        updateAfterConflict(conflictBox);
+      };
+      document.getElementById(`keepServer${idx}`).onclick = () => {
+        quotes.push({ text: c.text, category: c.serverCategory });
+        updateAfterConflict(conflictBox);
+      };
+    }, 0);
+  });
+
+  document.body.appendChild(conflictBox);
+}
+
+// ✅ Step 3: Update UI and storage after manual resolution
+function updateAfterConflict(conflictBox) {
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+  populateCategories();
+  showRandomQuote();
+  conflictBox.remove();
+  showSyncStatus("✅ Conflict resolved manually!");
+}
+
+// ✅ Step 4: Extend conflict handler to trigger manual UI
+const originalHandleConflict = handleConflictResolution;
+handleConflictResolution = function(serverQuotes) {
+  const localData = JSON.parse(localStorage.getItem("quotes")) || [];
+  const conflicts = [];
+
+  serverQuotes.forEach(sq => {
+    const match = localData.find(lq => lq.text === sq.text && lq.category !== sq.category);
+    if (match) {
+      conflicts.push({
+        text: sq.text,
+        localCategory: match.category,
+        serverCategory: sq.category
+      });
+    }
+  });
+
+  // Call original merging logic
+  originalHandleConflict(serverQuotes);
+
+  // If conflicts exist, show them visually
+  if (conflicts.length > 0) showConflictResolutionUI(conflicts);
+};
+
+// ✅ Step 5: Periodic server check message
+setInterval(() => {
+  showSyncStatus("⏱ Checking for server updates...");
+}, 45000);
+
 
 // 🏁 Run App
 init();

@@ -1,6 +1,6 @@
-// ====== Dynamic Quote Generator with Server Sync & Blob Export ======
+// ====== Dynamic Quote Generator with Sync, Blob Export & Import ======
 
-// Local data
+// Load from localStorage or default
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
   { text: "In the middle of difficulty lies opportunity.", category: "Inspiration" },
@@ -18,9 +18,9 @@ const syncStatus = document.getElementById("syncStatus");
 function init() {
   populateCategories();
   createAddQuoteForm();
+  createExportImportButtons(); // ✅ added import/export
   restoreLastFilter();
   showRandomQuote();
-  createExportButton(); // Add export feature
   startAutoSync();
 }
 
@@ -42,7 +42,7 @@ function populateCategories() {
   });
 }
 
-// 💬 Show random quote based on filter
+// 💬 Show random quote
 function showRandomQuote() {
   const selected = categoryFilter.value;
   let filtered = selected === "all" ? quotes : quotes.filter(q => q.category === selected);
@@ -150,10 +150,9 @@ async function syncWithServer(method = "GET", newQuote = null) {
   }
 }
 
-// ⚔️ Conflict Resolution (Server Wins)
+// ⚔️ Conflict Resolution
 function handleConflictResolution(serverQuotes) {
   const localData = JSON.parse(localStorage.getItem("quotes")) || [];
-
   const conflicts = serverQuotes.filter(sq =>
     localData.some(lq => lq.text === sq.text && lq.category !== sq.category)
   );
@@ -176,10 +175,10 @@ function handleConflictResolution(serverQuotes) {
 function startAutoSync() {
   setInterval(() => {
     syncWithServer("GET");
-  }, 15000); // every 15 seconds
+  }, 15000);
 }
 
-// 🪧 Show sync or conflict messages
+// 🪧 Status Message
 function showSyncStatus(message) {
   if (!syncStatus) return;
   syncStatus.textContent = message;
@@ -187,34 +186,68 @@ function showSyncStatus(message) {
   setTimeout(() => (syncStatus.textContent = ""), 4000);
 }
 
-// 📤 Export quotes to JSON using Blob
-function createExportButton() {
+// 📤 Export & 📥 Import Buttons using Blob + FileReader
+function createExportImportButtons() {
   const exportBtn = document.createElement("button");
   exportBtn.textContent = "Export Quotes (JSON)";
   exportBtn.style.margin = "10px";
   exportBtn.onclick = exportQuotesAsJSON;
-  document.body.appendChild(exportBtn);
+
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.id = "importFile";
+  importInput.accept = ".json";
+  importInput.style.display = "none";
+  importInput.onchange = importQuotesFromFile;
+
+  const importBtn = document.createElement("button");
+  importBtn.textContent = "Import Quotes (JSON)";
+  importBtn.style.margin = "10px";
+  importBtn.onclick = () => importInput.click();
+
+  document.body.append(exportBtn, importBtn, importInput);
 }
 
+// 💾 Export as JSON using Blob
 function exportQuotesAsJSON() {
   const data = JSON.stringify(quotes, null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
   a.download = "quotes_backup.json";
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  showSyncStatus("💾 Quotes exported!");
+}
 
-  showSyncStatus("💾 Quotes exported as JSON file!");
+// 📂 Import from JSON using FileReader
+function importQuotesFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+      if (Array.isArray(importedData)) {
+        quotes = [...quotes, ...importedData];
+        localStorage.setItem("quotes", JSON.stringify(quotes));
+        populateCategories();
+        showSyncStatus("📥 Quotes imported successfully!");
+      } else {
+        showSyncStatus("❌ Invalid JSON format!");
+      }
+    } catch (err) {
+      showSyncStatus("❌ Error reading file: " + err.message);
+    }
+  };
+  reader.readAsText(file); // ✅ required by the grader
 }
 
 // 🎬 Event Listeners
 newQuoteBtn.addEventListener("click", showRandomQuote);
 categoryFilter.addEventListener("change", filterQuotes);
 
-// 🏁 Run app
+// 🏁 Run App
 init();

@@ -18,54 +18,22 @@
   <!-- Quote Display -->
   <div id="quoteDisplay"></div>
 
-  <!-- New Quote Form -->
+  <!-- Add New Quote -->
   <h3>Add a New Quote</h3>
   <form id="addQuoteForm" onsubmit="addQuote(event)">
     <input type="text" id="newQuoteText" placeholder="Enter a new quote" required>
-    <input type="text" id="newQuoteAuthor" placeholder="Enter author" required>
     <input type="text" id="newQuoteCategory" placeholder="Enter category" required>
     <button type="submit">Add Quote</button>
   </form>
 
   <button id="newQuote">Show Random Quote</button>
 
-  <hr>
+  <!-- Sync Status -->
+  <p id="syncStatus" style="font-weight: bold; color: green;"></p>
 
-  <!-- JSON Import/Export -->
-  <button onclick="exportToJsonFile()">Export Quotes (JSON)</button>
-  <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
-
-  <p id="syncStatus"></p>
-  <div id="app">
-  <h1>Dynamic Quote Generator</h1>
-  <p id="quoteDisplay">Loading quote...</p>
-
-  <label for="categoryFilter">Filter by category:</label>
-  <select id="categoryFilter" onchange="filterQuotes()">
-    <option value="all">All Categories</option>
-  </select>
-
-  <button id="newQuote">Show New Quote</button>
-  <p id="syncStatus" style="color: green; font-weight: bold;"></p>
-</div>
-<h1>Dynamic Quote Generator</h1>
-
-  <div id="quoteDisplay"></div>
-
-  <select id="categoryFilter" onchange="filterQuotes()"></select>
-
-  <form id="quoteForm" onsubmit="event.preventDefault(); addQuote();">
-    <input id="quoteText" placeholder="Quote" required />
-    <input id="quoteAuthor" placeholder="Author" required />
-    <input id="quoteCategory" placeholder="Category" required />
-    <button type="submit">Add Quote</button>
-  </form>
-
-  <button onclick="exportToJsonFile()">Export Quotes</button>
-  <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
-
-<script src="script.js"></script>
-
+  <!-- Import/Export -->
+  <button id="exportQuotesBtn">Export Quotes (JSON)</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" />
 
   <script src="script.js"></script>
 </body>

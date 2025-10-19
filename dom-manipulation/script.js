@@ -1,4 +1,4 @@
-// ====== Dynamic Quote Generator with Sync, Blob Export & Import ======
+// ====== Dynamic Quote Generator with Sync, Blob Export & Conflict Resolution ======
 
 // Load from localStorage or default
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
@@ -8,7 +8,6 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "Life is 10% what happens to us and 90% how we react to it.", category: "Life" },
 ];
 
-// ✅ Required by checker
 let selectedCategory = localStorage.getItem("lastCategory") || "all";
 
 // DOM elements
@@ -16,12 +15,12 @@ const quoteDisplay = document.getElementById("quoteDisplay");
 const categoryFilter = document.getElementById("categoryFilter");
 const newQuoteBtn = document.getElementById("newQuote");
 const syncStatus = document.getElementById("syncStatus");
+const exportBtn = document.getElementById("exportQuotesBtn");
+const importInput = document.getElementById("importFile");
 
 // 🧠 Initialize App
 function init() {
   populateCategories();
-  createAddQuoteForm();
-  createExportImportButtons();
   restoreLastFilter();
   showRandomQuote();
   startAutoSync();
@@ -43,6 +42,8 @@ function populateCategories() {
     option.textContent = category;
     categoryFilter.appendChild(option);
   });
+
+  categoryFilter.value = selectedCategory;
 }
 
 // 💬 Show random quote
@@ -61,37 +62,9 @@ function showRandomQuote() {
   quoteDisplay.textContent = `"${random.text}" — ${random.category}`;
 }
 
-// ➕ Add Quote Form
-function createAddQuoteForm() {
-  const formContainer = document.createElement("div");
-  formContainer.id = "addQuoteForm";
-  formContainer.style.marginTop = "30px";
-
-  const title = document.createElement("h3");
-  title.textContent = "Add a New Quote";
-
-  const textInput = document.createElement("input");
-  textInput.type = "text";
-  textInput.id = "newQuoteText";
-  textInput.placeholder = "Enter quote text";
-  textInput.style.margin = "5px";
-
-  const catInput = document.createElement("input");
-  catInput.type = "text";
-  catInput.id = "newQuoteCategory";
-  catInput.placeholder = "Enter quote category";
-  catInput.style.margin = "5px";
-
-  const addBtn = document.createElement("button");
-  addBtn.textContent = "Add Quote";
-  addBtn.onclick = addQuote;
-
-  formContainer.append(title, textInput, catInput, addBtn);
-  document.body.appendChild(formContainer);
-}
-
 // ➕ Add new quote
-function addQuote() {
+function addQuote(event) {
+  event.preventDefault();
   const text = document.getElementById("newQuoteText").value.trim();
   const category = document.getElementById("newQuoteCategory").value.trim();
 
@@ -103,19 +76,19 @@ function addQuote() {
   const newQuote = { text, category };
   quotes.push(newQuote);
   localStorage.setItem("quotes", JSON.stringify(quotes));
-
   populateCategories();
   showRandomQuote();
+
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
 
-  // Simulate posting to server
+  // Simulate sending to server
   syncWithServer("POST", newQuote);
 }
 
 // 🧩 Filter quotes and save filter preference
 function filterQuotes() {
-  selectedCategory = categoryFilter.value; // ✅ required variable
+  selectedCategory = categoryFilter.value;
   localStorage.setItem("lastCategory", selectedCategory);
   showRandomQuote();
 }
@@ -188,36 +161,13 @@ function startAutoSync() {
 
 // 🪧 Status Message
 function showSyncStatus(message) {
-  if (!syncStatus) return;
   syncStatus.textContent = message;
   syncStatus.style.display = "block";
   setTimeout(() => (syncStatus.textContent = ""), 4000);
 }
 
-// 📤 Export & 📥 Import Buttons using Blob + FileReader
-function createExportImportButtons() {
-  const exportBtn = document.createElement("button");
-  exportBtn.textContent = "Export Quotes (JSON)";
-  exportBtn.style.margin = "10px";
-  exportBtn.onclick = exportQuotesAsJSON;
-
-  const importInput = document.createElement("input");
-  importInput.type = "file";
-  importInput.id = "importFile";
-  importInput.accept = ".json";
-  importInput.style.display = "none";
-  importInput.onchange = importQuotesFromFile;
-
-  const importBtn = document.createElement("button");
-  importBtn.textContent = "Import Quotes (JSON)";
-  importBtn.style.margin = "10px";
-  importBtn.onclick = () => importInput.click();
-
-  document.body.append(exportBtn, importBtn, importInput);
-}
-
-// 💾 Export as JSON using Blob
-function exportQuotesAsJSON() {
+// 📤 Export as JSON
+exportBtn.addEventListener("click", () => {
   const data = JSON.stringify(quotes, null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -227,15 +177,15 @@ function exportQuotesAsJSON() {
   a.click();
   URL.revokeObjectURL(url);
   showSyncStatus("💾 Quotes exported!");
-}
+});
 
-// 📂 Import from JSON using FileReader
-function importQuotesFromFile(event) {
+// 📂 Import from JSON
+importInput.addEventListener("change", event => {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = function(e) {
+
+  reader.onload = e => {
     try {
       const importedData = JSON.parse(e.target.result);
       if (Array.isArray(importedData)) {
@@ -250,8 +200,9 @@ function importQuotesFromFile(event) {
       showSyncStatus("❌ Error reading file: " + err.message);
     }
   };
-  reader.readAsText(file); // ✅ required for the grader
-}
+
+  reader.readAsText(file);
+});
 
 // 🎬 Event Listeners
 newQuoteBtn.addEventListener("click", showRandomQuote);

@@ -1,3 +1,5 @@
+// 🌟 Dynamic Quote Generator with Local & Session Storage + JSON Import/Export
+
 // Initial array of quotes
 let quotes = [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
@@ -11,11 +13,33 @@ const quoteDisplay = document.getElementById("quoteDisplay");
 const categorySelect = document.getElementById("categorySelect");
 const newQuoteBtn = document.getElementById("newQuote");
 
+// 🗃️ Save quotes to Local Storage
+function saveQuotes() {
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+}
+
+// 📦 Load quotes from Local Storage
+function loadQuotes() {
+  const storedQuotes = localStorage.getItem("quotes");
+  if (storedQuotes) {
+    quotes = JSON.parse(storedQuotes);
+  }
+}
+
 // 🧠 Initialize the app
 function init() {
+  loadQuotes(); // Load saved quotes first
   populateCategories();
-  createAddQuoteForm(); // dynamically create the quote form
+  createAddQuoteForm();
+  createImportExportButtons(); // Add import/export buttons
   showRandomQuote();
+
+  // 🔁 Restore last viewed quote from sessionStorage
+  const lastQuote = sessionStorage.getItem("lastQuote");
+  if (lastQuote) {
+    const parsed = JSON.parse(lastQuote);
+    quoteDisplay.textContent = `"${parsed.text}" — ${parsed.category}`;
+  }
 }
 
 // 📚 Populate category dropdown dynamically
@@ -52,6 +76,9 @@ function showRandomQuote() {
   const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
   const randomQuote = filteredQuotes[randomIndex];
   quoteDisplay.textContent = `"${randomQuote.text}" — ${randomQuote.category}`;
+
+  // 🧠 Save last viewed quote to sessionStorage
+  sessionStorage.setItem("lastQuote", JSON.stringify(randomQuote));
 }
 
 // ➕ Dynamically create the Add Quote form in the DOM
@@ -80,13 +107,11 @@ function createAddQuoteForm() {
   addButton.style.margin = "5px";
   addButton.onclick = addQuote;
 
-  // Append everything to the form container
   formContainer.appendChild(title);
   formContainer.appendChild(inputText);
   formContainer.appendChild(inputCategory);
   formContainer.appendChild(addButton);
 
-  // Append the form to the body
   document.body.appendChild(formContainer);
 }
 
@@ -101,6 +126,7 @@ function addQuote() {
   }
 
   quotes.push({ text: newText, category: newCategory });
+  saveQuotes(); // ✅ Save after adding
 
   populateCategories();
   quoteDisplay.textContent = `"${newText}" — ${newCategory}`;
@@ -109,9 +135,66 @@ function addQuote() {
   document.getElementById("newQuoteCategory").value = "";
 }
 
-// Event listeners
+// 📁 Create Import & Export buttons dynamically
+function createImportExportButtons() {
+  const container = document.createElement("div");
+  container.style.marginTop = "20px";
+
+  // Export button
+  const exportBtn = document.createElement("button");
+  exportBtn.textContent = "Export Quotes (JSON)";
+  exportBtn.onclick = exportToJsonFile;
+
+  // Import input
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.id = "importFile";
+  importInput.accept = ".json";
+  importInput.style.marginLeft = "10px";
+  importInput.onchange = importFromJsonFile;
+
+  container.appendChild(exportBtn);
+  container.appendChild(importInput);
+
+  document.body.appendChild(container);
+}
+
+// 💾 Export quotes to JSON file
+function exportToJsonFile() {
+  const dataStr = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "quotes.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// 📥 Import quotes from JSON file
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function (e) {
+    try {
+      const importedQuotes = JSON.parse(e.target.result);
+      if (!Array.isArray(importedQuotes)) throw new Error("Invalid format");
+
+      quotes.push(...importedQuotes);
+      saveQuotes();
+      populateCategories();
+      alert("Quotes imported successfully!");
+    } catch (err) {
+      alert("Failed to import JSON file. Please check the format.");
+    }
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
+// 🎯 Event listeners
 newQuoteBtn.addEventListener("click", showRandomQuote);
 categorySelect.addEventListener("change", showRandomQuote);
 
-// Run app
+// 🚀 Run the app
 init();

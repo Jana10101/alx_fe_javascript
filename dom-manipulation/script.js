@@ -376,6 +376,19 @@ async function fetchQuotesFromServer() {
   }
 }
 
+function syncQuotes() {
+  // Simulate syncing with a remote server
+  console.log("Syncing quotes...");
+
+  const quotes = JSON.parse(localStorage.getItem('quotes')) || [];
+
+  // Fake delay to simulate network request
+  setTimeout(() => {
+    console.log("Quotes synced successfully!");
+    alert(`Successfully synced ${quotes.length} quotes.`);
+  }, 1000);
+}
+
 
 // 🏁 Run App
 init();

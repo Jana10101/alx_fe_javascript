@@ -1,4 +1,4 @@
-// ====== Dynamic Quote Generator with Server Sync ======
+// ====== Dynamic Quote Generator with Server Sync & Blob Export ======
 
 // Local data
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
@@ -12,7 +12,7 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
 const quoteDisplay = document.getElementById("quoteDisplay");
 const categoryFilter = document.getElementById("categoryFilter");
 const newQuoteBtn = document.getElementById("newQuote");
-const syncStatus = document.getElementById("syncStatus"); // For user notifications
+const syncStatus = document.getElementById("syncStatus");
 
 // 🧠 Initialize App
 function init() {
@@ -20,6 +20,7 @@ function init() {
   createAddQuoteForm();
   restoreLastFilter();
   showRandomQuote();
+  createExportButton(); // Add export feature
   startAutoSync();
 }
 
@@ -136,7 +137,7 @@ async function syncWithServer(method = "GET", newQuote = null) {
       const response = await fetch(apiUrl);
       const serverData = await response.json();
 
-      // Simulate new data coming from server
+      // Simulate new data from server
       const serverQuotes = serverData.slice(0, 3).map((p, i) => ({
         text: p.title,
         category: ["Motivation", "Life", "Wisdom"][i % 3],
@@ -153,7 +154,6 @@ async function syncWithServer(method = "GET", newQuote = null) {
 function handleConflictResolution(serverQuotes) {
   const localData = JSON.parse(localStorage.getItem("quotes")) || [];
 
-  // Check for conflicts (quotes with same text but different category)
   const conflicts = serverQuotes.filter(sq =>
     localData.some(lq => lq.text === sq.text && lq.category !== sq.category)
   );
@@ -162,7 +162,6 @@ function handleConflictResolution(serverQuotes) {
     showSyncStatus("⚠️ Conflicts detected — server version kept.");
   }
 
-  // Merge and prioritize server data
   const mergedQuotes = [
     ...serverQuotes,
     ...localData.filter(lq => !serverQuotes.some(sq => sq.text === lq.text)),
@@ -186,6 +185,31 @@ function showSyncStatus(message) {
   syncStatus.textContent = message;
   syncStatus.style.display = "block";
   setTimeout(() => (syncStatus.textContent = ""), 4000);
+}
+
+// 📤 Export quotes to JSON using Blob
+function createExportButton() {
+  const exportBtn = document.createElement("button");
+  exportBtn.textContent = "Export Quotes (JSON)";
+  exportBtn.style.margin = "10px";
+  exportBtn.onclick = exportQuotesAsJSON;
+  document.body.appendChild(exportBtn);
+}
+
+function exportQuotesAsJSON() {
+  const data = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "quotes_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showSyncStatus("💾 Quotes exported as JSON file!");
 }
 
 // 🎬 Event Listeners

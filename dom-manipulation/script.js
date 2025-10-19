@@ -388,6 +388,24 @@ function syncQuotes() {
     alert(`Successfully synced ${quotes.length} quotes.`);
   }, 1000);
 }
+async function syncQuotes() {
+  const quotes = JSON.parse(localStorage.getItem('quotes')) || [];
+
+  try {
+    // Simulate sending quotes to server
+    console.log("Syncing quotes with server...");
+
+    // Example fake API call (you can replace it with real fetch)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log("Quotes synced with server!");
+    alert("Quotes synced with server!");
+
+  } catch (error) {
+    console.error("Error syncing quotes:", error);
+    alert("Failed to sync quotes. Please try again later.");
+  }
+}
 
 
 // 🏁 Run App

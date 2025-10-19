@@ -48,6 +48,21 @@
   <button id="newQuote">Show New Quote</button>
   <p id="syncStatus" style="color: green; font-weight: bold;"></p>
 </div>
+<h1>Dynamic Quote Generator</h1>
+
+  <div id="quoteDisplay"></div>
+
+  <select id="categoryFilter" onchange="filterQuotes()"></select>
+
+  <form id="quoteForm" onsubmit="event.preventDefault(); addQuote();">
+    <input id="quoteText" placeholder="Quote" required />
+    <input id="quoteAuthor" placeholder="Author" required />
+    <input id="quoteCategory" placeholder="Category" required />
+    <button type="submit">Add Quote</button>
+  </form>
+
+  <button onclick="exportToJsonFile()">Export Quotes</button>
+  <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
 
 <script src="script.js"></script>
 
